@@ -14,6 +14,7 @@ def run(parser):
     args = parser.parse_args()
     print('Processing scan {}.'.format(args.scan_id))
 
+    # TODO: We need to deal just with this part of the code. Reading the projections and creating the parser
     # Load projections and read out geometry data from the DICOM header.
     raw_projections, parser = read_dicom(parser)
     args = parser.parse_args()
@@ -29,7 +30,7 @@ def run(parser):
     if args.no_multiprocessing:
         proj_flat_detector = rebin_curved_to_flat_detector(args, raw_projections)
     else:
-        location = 'tmp/cache_dir'  # Todo: '/home/fabian/Desktop/tmp/cache_dir'
+        location = 'tmp/cache_dir'
         memory = Memory(location, verbose=0)
 
         cached_rebin_curved_to_flat_detector_core = memory.cache(_rebin_curved_to_flat_detector_core)

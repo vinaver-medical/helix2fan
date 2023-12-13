@@ -20,28 +20,28 @@ def read_projections(folder, indices):
     datasets = []
 
     # Get the relevant file names.
-    file_names = sorted([f for f in os.listdir(folder) if f.endswith(".dcm")])
+    file_names = sorted([f for f in os.listdir(folder) if f.endswith(".dcm")])  #.dcm -> .raw?
 
     if len(file_names) == 0:
-        raise ValueError('No DICOM files found in {}'.format(folder))
+        raise ValueError('No projection files found in {}'.format(folder))
 
     file_names = file_names[indices]
 
     raw_projections = None
 
     for i, file_name in enumerate(tqdm.tqdm(file_names, 'Loading projection data')):
-        # Read the DICOM projection.
-        dataset = pydicom.dcmread(folder + '/' + file_name)
+        # # Read the DICOM projection.
+        # dataset = pydicom.dcmread(folder + '/' + file_name)
 
         # Get required information.
-        rows = dataset.Rows
-        cols = dataset.Columns
+        rows = 1#dataset.Rows
+        cols = 1#dataset.Columns
         # hu_factor = float(dataset[0x70411001].value)  # WaterAttenuationCoefficient, see manual for HU conversion.
-        rescale_intercept = dataset.RescaleIntercept
-        rescale_slope = dataset.RescaleSlope
+        rescale_intercept = 0#dataset.RescaleIntercept
+        rescale_slope = 1#dataset.RescaleSlope
 
         # Load the array as bytes.
-        proj_array = np.array(np.frombuffer(dataset.PixelData, 'H'), dtype='float32')
+        proj_array = np.array(np.frombuffer(dataset.PixelData, 'H'), dtype='float32')  # raw projection data goes here
         proj_array = proj_array.reshape([cols, rows], order='F')
 
         # Rescale array according to the TCIA (LDCT-and-Projection-data) DICOM-CT-PD User Manual Version 3.
@@ -52,10 +52,11 @@ def read_projections(folder, indices):
         # Store results.
         if raw_projections is None:
             # We need to load the first dataset before we know the shape.
-            raw_projections = np.empty((len(file_names), cols, rows), dtype='float32')
+            raw_projections = np.empty((len(file_names), cols, rows), dtype='float32')  # create an empty projections
+            # array if there is none
 
-        raw_projections[i] = proj_array[:, ::-1]
-        datasets.append(dataset)
+        raw_projections[i] = proj_array[:, ::-1]  # add projections one by one
+        datasets.append(dataset)  # add datasets one by one. These contain all the info in the meta file
 
     return datasets, raw_projections
 

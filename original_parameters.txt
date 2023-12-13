@@ -1,0 +1,57 @@
+port_number: 3454           # for running on multiple servers (tara, altair, etc) otherwise ignore
+use_all_server_GPUs: yes     # yes to use available GPUs on current server and run faster, no to use single GPU
+multiply_constant: 1.0      # constant value for multiplying data
+number_of_repeats: 1        # number of times to repeat the entire simulation (for ensemble noise estimates)
+MainDir: /net/tara/data3/usr/sv235/cylinder_XCAT_abdomen_thorax_test # output directory
+paramExcelFile: /home/sv235/myDukeSimDirectory/input/parameters/XCAT_abdomen_thorax/DukeSim_AbdomenThorax_parameter_file_v1.xlsx
+paramIndex: 0        # Row 2 of excel sheet
+material_spreadsheet: /home/sv235/myDukeSimDirectory/input/parameters/XCAT_abdomen_thorax/DukeSim_AbdomenThorax_material_file_reduced_v0.xlsx
+dual_source: no
+source1_geometry: /home/sv235/myDukeSimDirectory/input/scanner/i2M4_120kV_w1_20LT_65HT_noFFS_A_inhouse.txt
+source2_geometry: ./path/to/parameters_scanner2.txt  # ignore for single source
+noise: yes                 # noise
+MonoEnergetic: no          # mono or poly-energetic
+BHC: yes                   # beam hardening correction
+z_motion: helical          # type of scan (axial/helical)
+mA: 300                    # tube current
+pitch: 1.2               # helical pitch factor
+P: 1152                    # projections per rotation
+msecs_per_revolution: 500  # rotation time (ms)
+msecs_per_phantom: 100
+N_Rotations: 5  #N_Rotations= z_motion_length/(pitch * collimation_isocenter)-> tablefeed/rotation (0018,9310)
+run_MCGPU: yes 
+N_histories: 5.e8
+P_Scatter: 36 
+mcgpu_materials_directory: ./input/material/mcgpu_materials
+CNN_smoothing: yes		#whether to use CNN (yes) or kernel (no) to smooth MCGPU output (CNN only runs if N_histories==5e8 && EID, otherwise kernel)
+run_RTcat: yes            
+water_mu_file: ./input/material/water_MU_1_140kV.bin      # for BHC
+number_source_samples: 1
+number_detector_samples: 1
+output_BIN: yes              # whether to output bin images for PCCT (ignore for EID)
+TCM: yes
+alpha: average
+L_ref: 32.0
+lateral_angle: 0
+do_material_dose: yes
+do_voxel_dose: yes
+run_recon: no
+slice_thickness: 2.0
+run_ram-lak: yes
+run_hann: yes
+run_cosine: no
+run_hamming: no
+run_shepp-logan: no
+f50_1: 0.2
+f50_2: 0.4
+f50_3: 0.6
+recon_FoV: 350
+Z_offset: 0
+Z_range: 50
+matsize: 512
+run_SDF: no    
+SDF_inputPath:     ./input/SDF/scannerName/SDF_scannerName_table.IRSTBL
+SDF_functionPath:  ./input/SDF/scannerName
+SDF_rescaleFactor: 30
+run_SimCT: no          
+SimCT_inputPath: ./input/SimCT/templates/template1/
