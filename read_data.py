@@ -30,12 +30,12 @@ def read_projections(folder, indices):
     raw_projections = None
 
     for i, file_name in enumerate(tqdm.tqdm(file_names, 'Loading projection data')):
-        # # Read the DICOM projection.
-        # dataset = pydicom.dcmread(folder + '/' + file_name)
+        # Read the DICOM projection.
+        dataset = pydicom.dcmread(folder + '/' + file_name)
 
         # Get required information.
-        rows = 1#dataset.Rows
-        cols = 1#dataset.Columns
+        rows = 900#dataset.Rows
+        cols = 64#dataset.Columns
         # hu_factor = float(dataset[0x70411001].value)  # WaterAttenuationCoefficient, see manual for HU conversion.
         rescale_intercept = 0#dataset.RescaleIntercept
         rescale_slope = 1#dataset.RescaleSlope
@@ -71,30 +71,36 @@ def read_dicom(parser):
     """
     args = parser.parse_args()
     indices = slice(args.idx_proj_start, args.idx_proj_stop)
-    data_headers, raw_projections = read_projections(args.path_dicom, indices)
+    #raw_projections = read_projections(args.path_dicom, indices)  # data_headers, raw_projections =
+
+    with open('result000_XCAT_EID_xcat_abdomen_thorax_small.xcat') as file:
+        projections = np.fromfile(file, dtype=np.float32)
+
+    raw_projections = projections.reshape((-1, 64, 900))
+    raw_projections = raw_projections[:int(len(raw_projections)/4)]
 
     # Read geometry information from the DICOM headers following instructions from the
     # TCIA (LDCT-and-Projection-data) DICOM-CT-PD User Manual Version 3.
-    angles = np.array([unpack_tag(d, 0x70311001) for d in data_headers]) + (np.pi / 2)
+    angles = np.linspace(2*np.pi, 0, num=1152, endpoint=False)#np.array([unpack_tag(d, 0x70311001) for d in data_headers]) + (np.pi / 2)
     angles = - np.unwrap(angles) - np.pi  # Different definition of angles (monotonously increasing, starting from a negative value)
-    dangles = np.array([unpack_tag(d, 0x7033100B) for d in data_headers])  # Flying focal spot dphi
-    dz = np.array([unpack_tag(d, 0x7033100C) for d in data_headers])  # Flying focal spot dz
-    drho = np.array([unpack_tag(d, 0x7033100D) for d in data_headers])  # Flying focal spot drho
-    nu = data_headers[0].Rows
-    nv = data_headers[0].Columns
-    du = unpack_tag(data_headers[0], 0x70291002)  # DetectorElementTransverseSpacing
-    dv = unpack_tag(data_headers[0], 0x70291006)  # DetectorElementAxialSpacing
+    #dangles = np.array([unpack_tag(d, 0x7033100B) for d in data_headers])  # Flying focal spot dphi
+    #dz = np.array([unpack_tag(d, 0x7033100C) for d in data_headers])  # Flying focal spot dz
+    #drho = np.array([unpack_tag(d, 0x7033100D) for d in data_headers])  # Flying focal spot drho
+    nu = 900  #data_headers[0].Rows
+    nv = 64  #data_headers[0].Columns
+    du = 1  #unpack_tag(data_headers[0], 0x70291002)  # DetectorElementTransverseSpacing
+    dv = 1  #unpack_tag(data_headers[0], 0x70291006)  # DetectorElementAxialSpacing
     dv_rebinned = 1  # [mm] Detector pixel v width of rebinned sinogram.
-    det_central_element = np.array(struct.unpack('2f', data_headers[0][0x70311033].value))
-    dso = unpack_tag(data_headers[0], 0x70311003)  # DetectorFocalCenterRadialDistance
-    dsd = unpack_tag(data_headers[0], 0x70311031)  # ConstantRadialDistance
-    ddo = (unpack_tag(data_headers[0], 0x70311031) - unpack_tag(data_headers[0], 0x70311003))  # ConstantRadialDistance - DetectorFocalCenterRadialDistance
-    pitch = ((unpack_tag(data_headers[-1], 0x70311002) -
-              unpack_tag(data_headers[0], 0x70311002)) /
-             ((np.max(angles) - np.min(angles)) / (2 * np.pi)))  # Mayo does not include the tag TableFeedPerRotation, we manually compute the pitch
-    z_positions = np.array([unpack_tag(d, 0x70311002) for d in data_headers])  # DetectorFocalCenterAxialPosition
-    nz_rebinned = int((z_positions[-1] - z_positions[0]) / dv_rebinned)
-    hu_factor = float(data_headers[0][0x70411001].value)  # WaterAttenuationCoefficient (see manual for HU conversion)
+    det_central_element = np.array((450, 32))  #np.array(struct.unpack('2f', data_headers[0][0x70311033].value))
+    dso = 575  #unpack_tag(data_headers[0], 0x70311003)  # DetectorFocalCenterRadialDistance
+    dsd = 1050  #unpack_tag(data_headers[0], 0x70311031)  # ConstantRadialDistance
+    ddo = dsd - dso#(unpack_tag(data_headers[0], 0x70311031) - unpack_tag(data_headers[0], 0x70311003))  # ConstantRadialDistance - DetectorFocalCenterRadialDistance
+    pitch = 1.2  #((unpack_tag(data_headers[-1], 0x70311002) -
+             # unpack_tag(data_headers[0], 0x70311002)) /
+             #((np.max(angles) - np.min(angles)) / (2 * np.pi)))  # Mayo does not include the tag TableFeedPerRotation, we manually compute the pitch
+    z_positions = np.linspace(163.24/5, 0, 1152) #np.array([unpack_tag(d, 0x70311002) for d in data_headers])  # DetectorFocalCenterAxialPosition
+    nz_rebinned = abs(int((z_positions[-1] - z_positions[0]) / dv_rebinned))
+    hu_factor = 0.1962  #float(data_headers[0][0x70411001].value)  # WaterAttenuationCoefficient (see manual for HU conversion)
     rotview = int(len(angles) / ((angles[-1] - angles[0]) / (2 * np.pi)))
 
     # Create parser.
@@ -130,11 +136,11 @@ def read_dicom(parser):
                         help='Angles of helix projections [rad].')
     parser.add_argument('--z_positions', type=float, default=z_positions.tolist(),
                         help='Axial positions of projections of the helical trajectory [mm].')
-    parser.add_argument('--dangles', type=float, default=dangles.tolist(),
-                        help='Flying focal spot correction dphi [rad].')
-    parser.add_argument('--dz', type=float, default=dz.tolist(),
-                        help='Flying focal spot correction dz [mm].')
-    parser.add_argument('--drho', type=float, default=drho.tolist(),
-                        help='Flying focal spot correction drho [mm].')
+    # parser.add_argument('--dangles', type=float, default=dangles.tolist(),
+    #                     help='Flying focal spot correction dphi [rad].')
+    # parser.add_argument('--dz', type=float, default=dz.tolist(),
+    #                     help='Flying focal spot correction dz [mm].')
+    # parser.add_argument('--drho', type=float, default=drho.tolist(),
+    #                     help='Flying focal spot correction drho [mm].')
 
     return raw_projections, parser

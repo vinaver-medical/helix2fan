@@ -58,11 +58,11 @@ def run(parser):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--path_dicom', type=str, required=True, help='Local path of helical projection data.')
+    #parser.add_argument('--path_projections', type=str, required=True, help='Local path of helical projection data.')
     parser.add_argument('--path_out', type=str, default='out', help='Output path of rebinned data.')
     parser.add_argument('--scan_id', type=str, default='scan_001', help='Custom scan ID.')
-    parser.add_argument('--idx_proj_start', type=int, default=12000, help='First index of helical projections that are processed.')
-    parser.add_argument('--idx_proj_stop', type=int, default=16000, help='Last index of helical projections that are processed.')
+    parser.add_argument('--idx_proj_start', type=int, default=1, help='First index of helical projections that are processed.')
+    parser.add_argument('--idx_proj_stop', type=int, default=1152, help='Last index of helical projections that are processed.')
     parser.add_argument('--save_all', dest='save_all', action='store_true', help='Save all intermediate results.')
     parser.add_argument('--no_multiprocessing', dest='no_multiprocessing', action='store_true', help='Switch off multiprocessing using joblib.')
     run(parser)
