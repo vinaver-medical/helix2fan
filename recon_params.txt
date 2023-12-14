@@ -1,0 +1,41 @@
+# Paths
+projection_file: /net/tara/data3/usr/sv235/XCAT_EID/result000_XCAT_EID_xcat_abdomen_thorax_small.xcat
+outpath: /net/tara/data3/usr/sv235/XCAT_EID/result000_XCAT_EID_xcat_abdomen_thorax_small/reconstruction/
+
+# Geometry
+rot_time: 500.0
+pitch: 1.2
+source_to_detector_distance: 1050.0
+source_to_object_distance: 575.0
+proj_per_rotation: 1152
+offset: 1.75
+anode_angle: 8.0
+row_pixel_size: 1.0
+column_pixel_size: 1.0
+table_direction: -1
+rotation_direction: 1
+initial_angle: 0.0
+
+# ZFFS
+even_offset: 0.0
+odd_offset: 0.0
+
+# Projections
+n_rows: 64
+n_columns: 900
+n_energy_bins: 120
+rescaling_factor: 1.0
+mu_eff: 0.1922
+
+# Reconstruction
+recon_type: single-source
+filter: ram-lak,hann
+GPU_index: 0,1,2,3
+z_offset: 0
+z_range: 50
+matsize: 512
+recon_FoV: 350
+slice_thickness: 2.0
+f50: 0.2,0.4,0.6
+run_fbp: yes
+run_iterative: no
