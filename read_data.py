@@ -34,8 +34,8 @@ def read_projections(folder, indices):
         dataset = pydicom.dcmread(folder + '/' + file_name)
 
         # Get required information.
-        rows = 900#dataset.Rows
-        cols = 64#dataset.Columns
+        rows = 64#dataset.Rows
+        cols = 900#dataset.Columns
         # hu_factor = float(dataset[0x70411001].value)  # WaterAttenuationCoefficient, see manual for HU conversion.
         rescale_intercept = 0#dataset.RescaleIntercept
         rescale_slope = 1#dataset.RescaleSlope
@@ -77,11 +77,12 @@ def read_dicom(parser):
         projections = np.fromfile(file, dtype=np.float32)
 
     raw_projections = projections.reshape((-1, 64, 900))
-    raw_projections = raw_projections[:int(len(raw_projections)/4)]
+    #raw_projections = raw_projections[:int(len(raw_projections)/4)]
+    #raw_projections = np.swapaxes(raw_projections, 2, 1)
 
     # Read geometry information from the DICOM headers following instructions from the
     # TCIA (LDCT-and-Projection-data) DICOM-CT-PD User Manual Version 3.
-    angles = np.linspace(2*np.pi, 0, num=1152, endpoint=False)#np.array([unpack_tag(d, 0x70311001) for d in data_headers]) + (np.pi / 2)
+    angles = np.linspace(0, 2*np.pi*4, num=1152*4, endpoint=False) #np.array([unpack_tag(d, 0x70311001) for d in data_headers]) + (np.pi / 2)
     angles = - np.unwrap(angles) - np.pi  # Different definition of angles (monotonously increasing, starting from a negative value)
     #dangles = np.array([unpack_tag(d, 0x7033100B) for d in data_headers])  # Flying focal spot dphi
     #dz = np.array([unpack_tag(d, 0x7033100C) for d in data_headers])  # Flying focal spot dz
@@ -98,7 +99,7 @@ def read_dicom(parser):
     pitch = 1.2  #((unpack_tag(data_headers[-1], 0x70311002) -
              # unpack_tag(data_headers[0], 0x70311002)) /
              #((np.max(angles) - np.min(angles)) / (2 * np.pi)))  # Mayo does not include the tag TableFeedPerRotation, we manually compute the pitch
-    z_positions = np.linspace(163.24/5, 0, 1152) #np.array([unpack_tag(d, 0x70311002) for d in data_headers])  # DetectorFocalCenterAxialPosition
+    z_positions = np.linspace(163.24, 0, 1152*4) #np.array([unpack_tag(d, 0x70311002) for d in data_headers])  # DetectorFocalCenterAxialPosition
     nz_rebinned = abs(int((z_positions[-1] - z_positions[0]) / dv_rebinned))
     hu_factor = 0.1962  #float(data_headers[0][0x70411001].value)  # WaterAttenuationCoefficient (see manual for HU conversion)
     rotview = int(len(angles) / ((angles[-1] - angles[0]) / (2 * np.pi)))

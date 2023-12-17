@@ -14,9 +14,9 @@ def run(parser):
     args = parser.parse_args()
     print('Processing scan {}.'.format(args.scan_id))
 
-    # TODO: We need to deal just with this part of the code. Reading the projections and creating the parser
     # Load projections and read out geometry data from the DICOM header.
     raw_projections, parser = read_dicom(parser)
+
     args = parser.parse_args()
 
     if args.save_all:
@@ -46,7 +46,7 @@ def run(parser):
                                          metadata=vars(args))
 
     # Rebinning of projections acquired on a helical trajectory to full-scan (2pi) fan beam projections.
-    proj_fan_geometry = rebin_helical_to_fan_beam_trajectory(args, proj_flat_detector)
+    proj_fan_geometry = rebin_helical_to_fan_beam_trajectory(args, proj_flat_detector)  #raw_projections
 
     save_path = Path(args.path_out) / Path('{}_flat_fan_projections.tif'.format(args.scan_id))
     save_to_tiff_stack_with_metadata(proj_fan_geometry,
@@ -62,7 +62,7 @@ if __name__ == '__main__':
     parser.add_argument('--path_out', type=str, default='out', help='Output path of rebinned data.')
     parser.add_argument('--scan_id', type=str, default='scan_001', help='Custom scan ID.')
     parser.add_argument('--idx_proj_start', type=int, default=1, help='First index of helical projections that are processed.')
-    parser.add_argument('--idx_proj_stop', type=int, default=1152, help='Last index of helical projections that are processed.')
+    parser.add_argument('--idx_proj_stop', type=int, default=1152*4, help='Last index of helical projections that are processed.')
     parser.add_argument('--save_all', dest='save_all', action='store_true', help='Save all intermediate results.')
     parser.add_argument('--no_multiprocessing', dest='no_multiprocessing', action='store_true', help='Switch off multiprocessing using joblib.')
     run(parser)
