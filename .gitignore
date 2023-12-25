@@ -6,3 +6,4 @@ __pycache__/
 *.npy
 result000_XCAT_EID_xcat_abdomen_thorax_small.xcat
 test.py
+data/
