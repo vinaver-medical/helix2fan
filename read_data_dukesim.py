@@ -26,7 +26,7 @@ def read_dicom(parser):
             value = line.split(':')[1].strip()
             param_dict[str(key)] = str(value)
 
-    with open('result000_XCAT_EID_xcat_abdomen_thorax_small.xcat') as file:
+    with open(args.path_projections) as file:
         projections = np.fromfile(file, dtype=np.float32)
 
     raw_projections = projections.reshape((-1, 64, 900))
@@ -36,7 +36,7 @@ def read_dicom(parser):
     # Read geometry information from the DICOM headers following instructions from the
     # TCIA (LDCT-and-Projection-data) DICOM-CT-PD User Manual Version 3.
     angles = np.linspace(0, 2*np.pi*4, num=1152*4, endpoint=False) #np.array([unpack_tag(d, 0x70311001) for d in data_headers]) + (np.pi / 2)
-    angles = - np.unwrap(angles) - np.pi  # Different definition of angles (monotonously increasing, starting from a negative value)
+    # angles = - np.unwrap(angles) - np.pi  # Different definition of angles (monotonously increasing, starting from a negative value)
     # dangles = np.array([unpack_tag(d, 0x7033100B) for d in data_headers])  # Flying focal spot dphi
     # dz = np.array([unpack_tag(d, 0x7033100C) for d in data_headers])  # Flying focal spot dz
     # drho = np.array([unpack_tag(d, 0x7033100D) for d in data_headers])  # Flying focal spot drho
@@ -49,13 +49,14 @@ def read_dicom(parser):
     dso = 575  #unpack_tag(data_headers[0], 0x70311003)  # DetectorFocalCenterRadialDistance
     dsd = 1050  #unpack_tag(data_headers[0], 0x70311031)  # ConstantRadialDistance
     ddo = dsd - dso#(unpack_tag(data_headers[0], 0x70311031) - unpack_tag(data_headers[0], 0x70311003))  # ConstantRadialDistance - DetectorFocalCenterRadialDistance
-    pitch = 1.2  #((unpack_tag(data_headers[-1], 0x70311002) -
+    length = 168.24
+    z_positions = np.linspace(-length, 0, 1152*4) #np.array([unpack_tag(d, 0x70311002) for d in data_headers])  # DetectorFocalCenterAxialPosition
+    pitch = (z_positions[-1] - z_positions[0]) / ((np.max(angles) - np.min(angles)) / (2*np.pi*4))  #((unpack_tag(data_headers[-1], 0x70311002) -
              # unpack_tag(data_headers[0], 0x70311002)) /
              #((np.max(angles) - np.min(angles)) / (2 * np.pi)))  # Mayo does not include the tag TableFeedPerRotation, we manually compute the pitch
-    z_positions = np.linspace(163.24, 0, 1152*4) #np.array([unpack_tag(d, 0x70311002) for d in data_headers])  # DetectorFocalCenterAxialPosition
     nz_rebinned = abs(int((z_positions[-1] - z_positions[0]) / dv_rebinned))
     hu_factor = 0.1962  #float(data_headers[0][0x70411001].value)  # WaterAttenuationCoefficient (see manual for HU conversion)
-    rotview = int(len(angles) / ((angles[-1] - angles[0]) / (2 * np.pi)))
+    rotview = int(len(angles) / ((angles[-1] - angles[0]) / (2 * np.pi * 4)))
 
     # Create parser.
     parser.add_argument('--indices', type=int, default=[indices.start, indices.stop],

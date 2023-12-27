@@ -7,7 +7,7 @@ from joblib import Memory
 from helper import save_to_tiff_stack_with_metadata, load_tiff_stack_with_metadata
 from rebinning_functions import rebin_curved_to_flat_detector, rebin_helical_to_fan_beam_trajectory, \
     _rebin_curved_to_flat_detector_core, rebin_curved_to_flat_detector_multiprocessing
-from read_data import read_dicom
+from read_data_dukesim import read_dicom
 
 
 def run(parser):
@@ -58,11 +58,11 @@ def run(parser):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--path_projections', type=str, default='./data/', required=False, help='Local path of helical projection data.')
+    parser.add_argument('--path_projections', type=str, default='./result000_XCAT_EID_xcat_abdomen_thorax_small.xcat', required=False, help='Local path of helical projection data.')
     parser.add_argument('--path_out', type=str, default='out', help='Output path of rebinned data.')
     parser.add_argument('--scan_id', type=str, default='XCAT_test_003', help='Custom scan ID.')
     parser.add_argument('--idx_proj_start', type=int, default=0, help='First index of helical projections that are processed.')
-    parser.add_argument('--idx_proj_stop', type=int, default=1152*4, help='Last index of helical projections that are processed.')
+    parser.add_argument('--idx_proj_stop', type=int, default=1152*3, help='Last index of helical projections that are processed.')
     parser.add_argument('--save_all', dest='save_all', action='store_true', help='Save all intermediate results.')
-    parser.add_argument('--no_multiprocessing', dest='no_multiprocessing', action='store_true', help='Switch off multiprocessing using joblib.')
+    parser.add_argument('--no_multiprocessing', dest='no_multiprocessing', default=False, help='Switch off multiprocessing using joblib.')
     run(parser)
