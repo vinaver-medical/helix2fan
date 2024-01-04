@@ -29,37 +29,39 @@ def read_dicom(parser):
     with open(args.path_projections) as file:
         projections = np.fromfile(file, dtype=np.float32)
 
-    raw_projections = projections.reshape((-1, param_dict['scanner_Z_pixels'], param_dict['scanner_Y_pixels']))
+    raw_projections = projections.reshape((-1, int(param_dict['scanner_Z_pixels']), int(param_dict['scanner_Y_pixels'])))
+    raw_projections = raw_projections[1152:3456]
     # raw_projections = raw_projections[:int(len(raw_projections)/4)]
     # raw_projections = np.swapaxes(raw_projections, 2, 1)
 
     # Read geometry information from the DICOM headers following instructions from the
     # TCIA (LDCT-and-Projection-data) DICOM-CT-PD User Manual Version 3.
-    length = param_dict['z_motion_length']
-    num_projections = param_dict['P']
-    Q = param_dict['Q']
-    num_rot = np.ceil(length/Q)
-    angles = np.linspace(0, num_rot*2*np.pi, num=num_rot*num_projections, endpoint=False) #np.array([unpack_tag(d, 0x70311001) for d in data_headers]) + (np.pi / 2)
+    length = float(param_dict['z_motion_length'])
+    num_projections = int(param_dict['P'])
+    Q = float(param_dict['Q'])
+    num_rot = 2 #int(np.ceil(length/Q))
+    angles = np.linspace(-num_rot*2*np.pi, 0, num=num_rot*num_projections, endpoint=True) #np.array([unpack_tag(d, 0x70311001) for d in data_headers]) + (np.pi / 2)
+    print(angles[0], angles[-1])
     # angles = - np.unwrap(angles) - np.pi  # Different definition of angles (monotonously increasing, starting from a negative value)
     # dangles = np.array([unpack_tag(d, 0x7033100B) for d in data_headers])  # Flying focal spot dphi
     # dz = np.array([unpack_tag(d, 0x7033100C) for d in data_headers])  # Flying focal spot dz
     # drho = np.array([unpack_tag(d, 0x7033100D) for d in data_headers])  # Flying focal spot drho
-    nu = param_dict['scanner_Y_pixels']  # data_headers[0].Rows
-    nv = param_dict['scanner_Z_pixels']  # data_headers[0].Columns
-    du = param_dict['scanner_Y_pixel_size']  # unpack_tag(data_headers[0], 0x70291002)  # DetectorElementTransverseSpacing
-    dv = param_dict['scanner_Z_pixel_size']  # unpack_tag(data_headers[0], 0x70291006)  # DetectorElementAxialSpacing
+    nu = int(param_dict['scanner_Y_pixels'])  # data_headers[0].Rows
+    nv = int(param_dict['scanner_Z_pixels'])  # data_headers[0].Columns
+    du = float(param_dict['scanner_Y_pixel_size'])  # unpack_tag(data_headers[0], 0x70291002)  # DetectorElementTransverseSpacing
+    dv = float(param_dict['scanner_Z_pixel_size'])  # unpack_tag(data_headers[0], 0x70291006)  # DetectorElementAxialSpacing
     dv_rebinned = 1  # [mm] Detector pixel v width of rebinned sinogram.
     det_central_element = np.array((450.5, 32.5))  # np.array(struct.unpack('2f', data_headers[0][0x70311033].value))
-    dso = param_dict['xray_source_to_center_of_rotation']  # unpack_tag(data_headers[0], 0x70311003)  # DetectorFocalCenterRadialDistance
-    dsd = param_dict['SID']  # unpack_tag(data_headers[0], 0x70311031)  # ConstantRadialDistance
+    dso = float(param_dict['xray_source_to center_of_rotation'])  # unpack_tag(data_headers[0], 0x70311003)  # DetectorFocalCenterRadialDistance
+    dsd = float(param_dict['SID'])  # unpack_tag(data_headers[0], 0x70311031)  # ConstantRadialDistance
     ddo = dsd - dso  # (unpack_tag(data_headers[0], 0x70311031) - unpack_tag(data_headers[0], 0x70311003))  # ConstantRadialDistance - DetectorFocalCenterRadialDistance
-    z_positions = np.linspace(-length, 0, num=num_rot*num_projections)  # np.array([unpack_tag(d, 0x70311002) for d in data_headers])  # DetectorFocalCenterAxialPosition
-    pitch = (z_positions[-1] - z_positions[0]) / ((np.max(angles) - np.min(angles)) / (2*np.pi*num_projections))  # ((unpack_tag(data_headers[-1], 0x70311002) -
+    z_positions = np.linspace(-3/4*length, -length/4, num=num_rot*num_projections, endpoint=True)  # np.array([unpack_tag(d, 0x70311002) for d in data_headers])  # DetectorFocalCenterAxialPosition
+    pitch = (z_positions[-1] - z_positions[0]) / ((np.max(angles) - np.min(angles)) / (2*np.pi))  # ((unpack_tag(data_headers[-1], 0x70311002) -
              # unpack_tag(data_headers[0], 0x70311002)) /
              # ((np.max(angles) - np.min(angles)) / (2 * np.pi)))  # Mayo does not include the tag TableFeedPerRotation, we manually compute the pitch
     nz_rebinned = int((z_positions[-1] - z_positions[0]) / dv_rebinned)
-    hu_factor = param_dict['mu_eff']  #float(data_headers[0][0x70411001].value)  # WaterAttenuationCoefficient (see manual for HU conversion)
-    rotview = int(len(angles) / ((angles[-1] - angles[0]) / (2 * np.pi * num_projections)))
+    hu_factor = float(param_dict['mu_eff'])  #float(data_headers[0][0x70411001].value)  # WaterAttenuationCoefficient (see manual for HU conversion)
+    rotview = int(len(angles) / ((angles[-1] - angles[0]) / (2 * np.pi)))
 
     # Create parser.
     parser.add_argument('--indices', type=int, default=[indices.start, indices.stop],

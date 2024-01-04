@@ -69,5 +69,5 @@ if __name__ == '__main__':
     axes[1].set_title('Reconstruction', fontsize=16)
     axes[1].axis('off')
     fig.tight_layout(h_pad=0.0, w_pad=0.0)
-    # plt.savefig('out/example_reco.png', dpi=400, bbox_inches='tight', pad_inches = 0)
-    plt.show()
+    plt.savefig('out/example_reco.png', dpi=400, bbox_inches='tight', pad_inches = 0)
+    #plt.show()
