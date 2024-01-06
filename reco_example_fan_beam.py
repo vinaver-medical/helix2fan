@@ -33,11 +33,11 @@ def run_reco(args):
             fbp = fbp.cpu().detach().numpy()
         reco.append(fbp)
 
-    reco = np.array(reco)
+    fbp_hu = 10 * array(reco)
 
     # Scale reconstruction to HU values following the DICOM-CT-PD
     # User Manual Version 3: WaterAttenuationCoefficient description
-    fbp_hu = 1000 * ((reco - metadata['hu_factor']) / metadata['hu_factor'])
+    # fbp_hu = 1000 * ((reco - metadata['hu_factor']) / metadata['hu_factor'])
 
     save_path = Path(args.path_out) / Path('{}_reco_{}.tif'.format(args.scan_id, args.fbp_filter))
     save_to_tiff_stack(fbp_hu, save_path)

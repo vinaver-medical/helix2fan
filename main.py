@@ -58,11 +58,11 @@ def run(parser):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--path_projections', type=str, default='./result000_XCAT_EID_xcat_abdomen_thorax_small.xcat', required=False, help='Local path of helical projection data.')
+    parser.add_argument('--path_projections', type=str, default='./data/EID/result000_XCAT_EID_gad_heart_2rot_abdomen_thorax_male_medium1.xcat', required=False, help='Local path of helical projection data.')
     parser.add_argument('--path_out', type=str, default='out', help='Output path of rebinned data.')
-    parser.add_argument('--scan_id', type=str, default='XCAT_test_006', help='Custom scan ID.')
+    parser.add_argument('--scan_id', type=str, default='XCAT_test_009_noDetOffset_newPitch', help='Custom scan ID.')
     parser.add_argument('--idx_proj_start', type=int, default=1, help='First index of helical projections that are processed.')
-    parser.add_argument('--idx_proj_stop', type=int, default=2304, help='Last index of helical projections that are processed.')
+    parser.add_argument('--idx_proj_stop', type=int, default=3600, help='Last index of helical projections that are processed.')
     parser.add_argument('--save_all', dest='save_all', action='store_true', help='Save all intermediate results.')
     parser.add_argument('--no_multiprocessing', dest='no_multiprocessing', default=False, help='Switch off multiprocessing using joblib.')
     run(parser)

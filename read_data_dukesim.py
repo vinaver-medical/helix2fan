@@ -19,7 +19,7 @@ def read_dicom(parser):
     indices = slice(args.idx_proj_start, args.idx_proj_stop)
 
     param_dict = {}
-    with open('rtcat_params.txt') as param_file:
+    with open('./data/EID/rtcat_params.txt') as param_file:
         for line in param_file:
             line = line.strip()
             key = line.split(':')[0].strip()
@@ -30,7 +30,7 @@ def read_dicom(parser):
         projections = np.fromfile(file, dtype=np.float32)
 
     raw_projections = projections.reshape((-1, int(param_dict['scanner_Z_pixels']), int(param_dict['scanner_Y_pixels'])))
-    raw_projections = raw_projections[1152:3456]
+    #raw_projections = raw_projections[1152:3456]
     # raw_projections = raw_projections[:int(len(raw_projections)/4)]
     # raw_projections = np.swapaxes(raw_projections, 2, 1)
 
@@ -41,7 +41,6 @@ def read_dicom(parser):
     Q = float(param_dict['Q'])
     num_rot = 2 #int(np.ceil(length/Q))
     angles = np.linspace(-num_rot*2*np.pi, 0, num=num_rot*num_projections, endpoint=True) #np.array([unpack_tag(d, 0x70311001) for d in data_headers]) + (np.pi / 2)
-    print(angles[0], angles[-1])
     # angles = - np.unwrap(angles) - np.pi  # Different definition of angles (monotonously increasing, starting from a negative value)
     # dangles = np.array([unpack_tag(d, 0x7033100B) for d in data_headers])  # Flying focal spot dphi
     # dz = np.array([unpack_tag(d, 0x7033100C) for d in data_headers])  # Flying focal spot dz
@@ -55,7 +54,7 @@ def read_dicom(parser):
     dso = float(param_dict['xray_source_to center_of_rotation'])  # unpack_tag(data_headers[0], 0x70311003)  # DetectorFocalCenterRadialDistance
     dsd = float(param_dict['SID'])  # unpack_tag(data_headers[0], 0x70311031)  # ConstantRadialDistance
     ddo = dsd - dso  # (unpack_tag(data_headers[0], 0x70311031) - unpack_tag(data_headers[0], 0x70311003))  # ConstantRadialDistance - DetectorFocalCenterRadialDistance
-    z_positions = np.linspace(-3/4*length, -length/4, num=num_rot*num_projections, endpoint=True)  # np.array([unpack_tag(d, 0x70311002) for d in data_headers])  # DetectorFocalCenterAxialPosition
+    z_positions = np.linspace(-length+32, 0, num=num_rot*num_projections, endpoint=True) #ovde treba plus # np.array([unpack_tag(d, 0x70311002) for d in data_headers])  # DetectorFocalCenterAxialPosition
     pitch = (z_positions[-1] - z_positions[0]) / ((np.max(angles) - np.min(angles)) / (2*np.pi))  # ((unpack_tag(data_headers[-1], 0x70311002) -
              # unpack_tag(data_headers[0], 0x70311002)) /
              # ((np.max(angles) - np.min(angles)) / (2 * np.pi)))  # Mayo does not include the tag TableFeedPerRotation, we manually compute the pitch
